@@ -79,11 +79,81 @@ ORDER BY totalsalary DESC;
 
 --4.Using the fielding table, group players into three groups based on their position: label players with position OF as "Outfield", those with position "SS", "1B", "2B", and "3B" as "Infield", and those with position "P" or "C" as "Battery". Determine the number of putouts made by each of these three groups in 2016.
 
+SELECT
+DISTINCT playerid,
+yearid,
+pos,
+CASE WHEN pos = 'OF' THEN 'Outfield'
+     WHEN pos = 'SS'
+	          OR pos = '1B'
+			  OR pos = '2B'
+			  OR pos = '3B' THEN 'Infield'
+			  ELSE 'Battery' END AS position
+FROM fielding;			  
+
+SELECT
+	SUM(po) AS total_putouts,
+	CASE WHEN pos = 'OF' THEN 'Outfield'
+		WHEN pos = 'SS'
+			OR pos = '1B'
+			OR pos = '2B'
+			OR pos = '3B' THEN 'Infield'
+		ELSE 'Battery' END AS position
+FROM fielding
+WHERE yearid = '2016'
+GROUP BY position;
+
+--Answer Battery (41,424) Infield (58,934), Outfield (29,560)
 
 
 --5.Find the average number of strikeouts per game by decade since 1920. Round the numbers you report to 2 decimal places. Do the same for home runs per game. Do you see any trends?
 
+SELECT 
+	ROUND((ROUND(AVG(so),2) / (SUM(g) / 2)), 2) AS avgsopg,
+	ROUND((ROUND(AVG(hr),2) / (SUM(g) / 2)), 2) AS avghrpg,
+	CASE WHEN yearid BETWEEN 1920 AND 1929 THEN '1920s'
+		 WHEN yearid BETWEEN 1930 AND 1939 THEN '1930s'
+		 WHEN yearid BETWEEN 1940 AND 1949 THEN '1940s'
+		 WHEN yearid BETWEEN 1950 AND 1959 THEN '1950s'
+		 WHEN yearid BETWEEN 1960 AND 1969 THEN '1960s'
+		 WHEN yearid BETWEEN 1970 AND 1979 THEN '1970s'
+		 WHEN yearid BETWEEN 1980 AND 1989 THEN '1980s'
+		 WHEN yearid BETWEEN 1990 AND 1999 THEN '1990s'
+		 WHEN yearid BETWEEN 2000 AND 2009 THEN '2000s'
+		 WHEN yearid BETWEEN 2010 AND 2019 THEN '2010s' 
+		 END AS decade
+		 FROM teams
+WHERE yearid >= 1920
+GROUP BY decade
+ORDER BY decade;
+
+
 --6. Find the player who had the most success stealing bases in 2016, where success is measured as the percentage of stolen base attempts which are successful. (A stolen base attempt results either in a stolen base or being caught stealing.) Consider only players who attempted at least 20 stolen bases.
+
+SELECT
+	DISTINCT b.playerid,
+	p.namefirst,
+	p.namelast,
+	CAST(b.sb AS numeric) AS stolenbases,
+	CAST(b.cs AS numeric) AS caughtstealing,
+	CAST(b.sb AS numeric) + CAST(b.cs AS numeric) AS attempts,
+	ROUND((CAST(b.sb AS numeric) / (CAST(b.sb AS numeric) + CAST(b.cs AS numeric))), 2) AS success
+FROM batting AS b
+JOIN people AS p
+ON b.playerid = p.playerid
+WHERE b.yearid = '2016'
+GROUP BY
+	b.playerid,
+	p.namefirst,
+	p.namelast,
+	b.sb,
+	b.cs
+HAVING CAST(sb AS numeric) + CAST(cs AS numeric) >= 20
+ORDER BY success DESC;
+------
+
+
+
 
 --7.From 1970 – 2016, what is the largest number of wins for a team that did not win the world series? What is the smallest number of wins for a team that did win the world series? Doing this will probably result in an unusually small number of wins for a world series champion – determine why this is the case. Then redo your query, excluding the problem year. How often from 1970 – 2016 was it the case that a team with the most wins also won the world series? What percentage of the time?
 
@@ -92,3 +162,8 @@ ORDER BY totalsalary DESC;
 --9.Which managers have won the TSN Manager of the Year award in both the National League (NL) and the American League (AL)? Give their full name and the teams that they were managing when they won the award.
 
 --10.Find all players who hit their career highest number of home runs in 2016. Consider only players who have played in the league for at least 10 years, and who hit at least one home run in 2016. Report the players' first and last names and the number of home runs they hit in 2016.
+
+
+
+
+
